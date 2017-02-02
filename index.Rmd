@@ -33,6 +33,9 @@ library(paran)
 # install_github("maxheld83/qmethod", ref = "more-rot")
 library(qmethod)
 
+# install_github("maxheld83/pensieve")
+library(pensieve)
+
 # perioridally run these
 # packrat::status()  # not to be trusted, though :(
 # packrat::snapshot()
@@ -44,8 +47,6 @@ opts_chunk$set(tidy = TRUE, cache = TRUE, echo = FALSE, warning = FALSE, message
 options(digits = 2)  # display only 2 digits in knitr output
 options(scipen = "100")  # penality for scientific notation
 ```
-
-# Daten einlesen
 
 ```{r import-data, include=FALSE, eval=FALSE}
 # all of this stuff only runs interactively
@@ -147,9 +148,15 @@ rm(list = ls())
 
 ```{r read-data}
 qsb <- readRDS(file = "manual_data.rds")
+masterdat <- qsb$masterdat
+items <- qsb$items
+qsorts <- qsb$qsorts
+rm(qsb)
 ```
 
-```{r kill-false-distros, eval = FALSE}
+# Analyse
+
+```{r kill-false-distros}
 forced <- c("-6" = 1,
             "-5" = 2,
             "-4" = 2,
@@ -163,14 +170,72 @@ forced <- c("-6" = 1,
             "4" = 2,
             "5" = 2,
             "6" = 1) 
-correct_distro <- apply(X = qsorts, MARGIN = 2, FUN = function(x) {
-  # sum(table(x)) == 37  # checks out
-  # table(x)
-  isTRUE(all.equal(as.numeric(table(x)), forced, check.attributes = FALSE))
-  # help(all.equal)
-})
-length(correct_distro) - sum(correct_distro)
+
+# blow kicks out non-forced distros
+# correct_distro <- apply(X = qsorts, MARGIN = 2, FUN = function(x) {
+#   # sum(table(x)) == 37  # checks out
+#   # table(x)
+#   isTRUE(all.equal(as.numeric(table(x)), forced, check.attributes = FALSE))
+#   # help(all.equal)
+# })
+# length(correct_distro) - sum(correct_distro)
+# qsorts <- qsorts[,correct_distro]
+# masterdat <- masterdat[correct_distro, ]
 ```
 
 
-# Analyse
+## Faktorerhaltung
+
+```{r qmethod-paran, eval = FALSE}
+nfac <- q.nfactors(dataset = qsorts, cutoff = 5, quietly = TRUE, cor.method = "spearman", iterations = 5000)
+nfac$summary
+nfac2 <- pensieve::run_parallel(dataset = qsorts, runs = 50000)
+nfac$eigenvalues$Unadjusted[1:4] - nfac2
+```
+
+
+## Faktorexktration
+
+```{r extraction}
+# res <- qmethod(dataset = qsorts, nfactors = 2, rotation = "quartimax", forced = TRUE, cor.method = "spearman", reorder = FALSE, threshold = "none", allow.confounded = TRUE)
+res <- qmethod(dataset = qsorts, 
+               nfactors = 2, 
+               forced = FALSE, 
+               distribution = rep(as.integer(names(forced)), forced),
+               rotation = "varimax",
+               cor.method = "spearman",
+               reorder = FALSE,
+               threshold = "none",
+               allow.confounded = TRUE)
+res <- q.fcolors(res)
+```
+
+```{r loas-comp, fig.cap="Ladungen der Faktoren auf den Leute-Variablen"}
+compplot <- q.compplot(res)
+ggsave(filename = "compplot.pdf",
+       plot = compplot,
+       width = 9,
+       height = 12,
+       paper = "a4")
+```
+
+```{r f1, fig.cap="Idealtypische Sortierungen Faktor 1"}
+f1 <- q.scoreplot.ord(results = res, factor = 1, label.scale = 350)
+ggsave(filename = "f1.pdf",
+       plot = f1,
+       paper = "a4r",
+       scale = 3)
+```
+
+```{r f2, fig.cap="Idealtypische Sortierungen Faktor 2"}
+f2 <- q.scoreplot.ord(results = res, factor = 2, label.scale = 350)
+ggsave(filename = "f2.pdf",
+       plot = f2,
+       paper = "a4r",
+       scale = 3)
+```
+
+
+
+
+
