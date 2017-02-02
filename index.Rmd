@@ -19,7 +19,8 @@ Welche Präferenzen haben Studierende, Lehrer, Eltern, Schüler und Personengrup
 Auf Grundlage der theoretischen Ansätze des Seminars wurde gemeinsam ein Umfrageinstrument (Q-Methodologie) entwickelt und mit 95 Teilnehmenden erprobt.
 
 
-```{r preamble, echo=FALSE, include=FALSE, eval=FALSE}
+```{r preamble, echo=FALSE, include=FALSE}
+
 library(devtools)
 library(packrat)
 library(bookdown)
