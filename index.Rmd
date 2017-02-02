@@ -2,12 +2,11 @@
 title: "q-sb"
 author: "Verena Kasztantowicz"
 date: '`r Sys.Date()`'
-site: bookdown::bookdown_site
-description: "Sichtweisen auf Sprachbetrachtung"
+description: Sichtweisen auf Sprachbetrachtung
 documentclass: book
 github-repo: VerenaKasztantowicz/q-sb
 link-citations: yes
-# bibliography: verenakasztantowicz.bib
+site: bookdown::bookdown_site
 biblio-style: apalike
 ---
   
@@ -20,7 +19,6 @@ Auf Grundlage der theoretischen Ansätze des Seminars wurde gemeinsam ein Umfrag
 
 
 ```{r preamble, echo=FALSE, include=FALSE}
-
 library(devtools)
 library(packrat)
 library(bookdown)
@@ -29,96 +27,149 @@ library(rmarkdown)
 library(reshape2)
 library(ggplot2)
 library(gridExtra)
-# install_github("maxheld83/qmethod")
-library(qmethod)
-# install.packages("ggrepel", repos = "http://cran.us.r-project.org")
 library(ggrepel)
 library(paran)
+
+# install_github("maxheld83/qmethod", ref = "more-rot")
+library(qmethod)
+
+# perioridally run these
+# packrat::status()  # not to be trusted, though :(
+# packrat::snapshot()
 ```
 
-```{r setup-knitr, echo = FALSE, include=FALSE, eval=FALSE}
+```{r setup-knitr, include=FALSE}
 #opts_knit$set(root.dir = normalizePath(getwd()))  # make sure the knitr path is correct
-opts_chunk$set(tidy = TRUE, cache = TRUE)  # tidy formats code nicely in echo
+opts_chunk$set(tidy = TRUE, cache = TRUE, echo = FALSE, warning = FALSE, message = FALSE)  # tidy formats code nicely in echo
 options(digits = 2)  # display only 2 digits in knitr output
 options(scipen = "100")  # penality for scientific notation
 ```
 
 # Daten einlesen
 
-```{r import-data, include=FALSE, echo=FALSE, cache=TRUE, eval=FALSE}
+```{r import-data, include=FALSE, eval=FALSE}
 # all of this stuff only runs interactively
+# install.packages("googlesheets")
 library(googlesheets)
 # Import directly from Google ====
-gs_ls()
+googlesheets::gs_auth()  # do this manually
 etable <- gs_key(x = "1EQ93Zc5QVc8BYWZmKqj0UubBcIU0Lb1HoJtMrCGlLfQ", verbose = TRUE)
 
-# masterdat aka stammdaten
+# masterdat aka stammdaten ====
 masterdat <- gs_read_csv(ss = etable,  # ss = spreadsheet
                          ws = "Teilnehmende",  # ws = worksheet
                          check.names = TRUE)
+# anonymise masterdat, delete first col 
 
-# import items
-items <- gs_read_csv(ss = etable,
+#### THIS IS AN IMPORTANT STEP FOR ANONYMIZATION DO NOT TOUCH ME UNLESS YOU ARE SURE
+masterdat$`Erhebung.durch` <- NULL  # this just kills the family names
+#### THIS IS AN IMPORTANT STEP FOR ANONYMIZATION DO NOT TOUCH ME UNLESS YOU ARE SURE
+
+
+# Test and fix inconsistencies =====
+colnames(masterdat) <-  c("Name", "Taetigkeit", "Alter", "Zeit", "Kinder", "Bemerkungen")  # change masterdat col name "Teilnehemde (Vorname)" to "Name"
+masterdat <- masterdat[complete.cases(masterdat[,1]),] # delete N.A. in masterdat col "Names"
+  
+fake_cases <- masterdat$Name[!(masterdat$Name %in% etable$ws$ws_title)] # these are in masterdat, but not in etable, aka FAKE CASES
+orphans <- etable$ws$ws_title[!(etable$ws$ws_title %in% masterdat$Name)]  # these are in etable, but not in masterdat aka ORPHANS
+abs(length(etable$ws$ws_title) - 3 - length(masterdat$Name)) == length(fake_cases)  # these are the number of fake cases, should be same as number of fake_cases
+
+masterdat <- masterdat[!(masterdat$Name %in% fake_cases), ]  # now it should be clearn
+
+# problem: some participants have the same name; make names unique
+library(assertthat)
+assert_that(all(!duplicated(masterdat$Name)))  # must all be unique
+assert_that(all(!duplicated(etable$ws$ws_title)))  # must all be unique
+
+# import items ====
+items_raw <- gs_read_csv(ss = etable,
                      ws = "Items",
                      check.names = TRUE)
-
-# import the raw data
-peoplesheets <- etable$ws$ws_title[!etable$ws$ws_title %in% c("Teilnehmende", "Items")]
+items <- matrix(data = items_raw$Items,
+                nrow = nrow(items_raw),
+                ncol = 1,
+                dimnames = list(items = items_raw$Handle, language = "german"))
 
 raw <- NULL
-raw <- sapply(X = peoplesheets,
+raw <- sapply(X = masterdat$Name,
               USE.NAMES = TRUE,
               simplify = FALSE,
               FUN = function(x) {
                 onesheet <- gs_read(ss = etable,
                                     ws = x,
-                                    range = "A1:B38",
-                                    skip = 1,
+                                    range = "A2:B38",
                                     col_names = c("items", "q_sets"),
                                     check.names = TRUE)
-                Sys.sleep(time = 5)  # necessary to appease google quota
+                Sys.sleep(time = .1)  # necessary to appease google quota
                 return(onesheet)
+                help(gs_read)
               })
-
-# anonymise masterdat, delete first col 
-masterdat$`Erhebung.durch` <- NULL
-
-# change masterdat col name "Teilnehemde (Vorname)" to "Name"
-colnames(masterdat)[2] <- "Name"
-
-# delete N.A. in masterdat col "Names"
-masterdat <- masterdat[complete.cases(masterdat[,2]),]
-
-# problem: some participants have the same name; make names unike
-
-
 
 # check names
 if (!all(names(raw) %in% masterdat$Name)) {stop("Some names from raw are not in masterdat.")}
 if (!all(masterdat$Name %in% names(raw))) {stop("Some names from masterdat are not in raw.")}
 
+# make valid R names
+# install.packages("lettercase")
+library(lettercase)
+masterdat$Name <- names(raw) <- lettercase::make_names(names = names(raw))
+
 # extract qsorts  ====
-qsorts <- array(data = NA, # make empty object first
-                dim = c(nrow(items), nrow(masterdat), 2), 
-                dimnames = list(items = items$handle, 
-                                people = masterdat$Name))
+qsorts <- matrix(data = NA, # make empty object first
+                 nrow = nrow(items),
+                 ncol = nrow(masterdat),
+                 dimnames = list(items = rownames(items),
+                                 people = masterdat$Name))
+
+# this is just for testing
+# qsorts <- qsorts[, !(colnames(qsorts) == "Carina")]
 
 raw <- lapply(X = raw, FUN = function(x) {as.data.frame(x)})  # maybe necessary if tibble acts up
-for (p in names(raw)) {  # loop over people
-  for (i in raw[[p]]$handle) {  # loop over items
-    for (c in c("pers", "schul")) {  # loop over conditions
-      qsorts[i, p, c] <- raw[[p]][raw[[p]]$handle == i, c]
-    }
+for (p in colnames(qsorts)) {  # loop over people
+  assert_that(p %in% names(raw))  # does that even exist as raw?
+  this_person <- raw[[p]]
+  assert_that(all(!duplicated(this_person$items)))  # are all the items unique?
+  for (i in rownames(qsorts)) {  # loop over items
+    full_item <- items[i, "german"]
+    assert_that(full_item %in% this_person$items)  # is this item in there?
+    qsorts[i, p] <- this_person[this_person$items == full_item, "q_sets"]
   }
 }
-storage.mode(qsorts) <- "integer"
-# writeout .Rdata to repo for reproducible analysis and Travis CI ====
-save(qsorts, masterdat, items, file = "manual_data.Rdata")
-rm(qsorts, masterdat, items)
+
+qsb <- NULL
+qsb$items <- items
+qsb$masterdat <- masterdat
+qsb$qsorts <- qsorts
+
+saveRDS(qsb, file = "manual_data.rds")
+rm(list = ls())
 ```
 
-```{r read-data, echo=FALSE, include=FALSE, eval=FALSE}
-load(file = "manual_data.Rdata")
+```{r read-data}
+qsb <- readRDS(file = "manual_data.rds")
+```
+
+```{r kill-false-distros, eval = FALSE}
+forced <- c("-6" = 1,
+            "-5" = 2,
+            "-4" = 2,
+            "-3" = 3,
+            "-2" = 4,
+            "-1" = 4,
+             "0" = 5,
+            "1" = 4,
+            "2" = 4,
+            "3" = 3,
+            "4" = 2,
+            "5" = 2,
+            "6" = 1) 
+correct_distro <- apply(X = qsorts, MARGIN = 2, FUN = function(x) {
+  # sum(table(x)) == 37  # checks out
+  # table(x)
+  isTRUE(all.equal(as.numeric(table(x)), forced, check.attributes = FALSE))
+  # help(all.equal)
+})
+length(correct_distro) - sum(correct_distro)
 ```
 
 
