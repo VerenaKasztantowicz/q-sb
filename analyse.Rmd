@@ -1,0 +1,80 @@
+# Daten einlesen
+
+```{r import-data, include=FALSE, echo=FALSE, cache=TRUE, eval=FALSE}
+# all of this stuff only runs interactively
+library(googlesheets)
+# Import directly from Google ====
+gs_ls()
+etable <- gs_key(x = "1EQ93Zc5QVc8BYWZmKqj0UubBcIU0Lb1HoJtMrCGlLfQ", verbose = TRUE)
+
+# masterdat aka stammdaten
+masterdat <- gs_read_csv(ss = etable,  # ss = spreadsheet
+                         ws = "Teilnehmende",  # ws = worksheet
+                         check.names = TRUE)
+
+# import items
+items <- gs_read_csv(ss = etable,
+                     ws = "Items",
+                     check.names = TRUE)
+
+# import the raw data
+peoplesheets <- etable$ws$ws_title[!etable$ws$ws_title %in% c("Teilnehmende", "Items")]
+
+raw <- NULL
+raw <- sapply(X = peoplesheets,
+              USE.NAMES = TRUE,
+              simplify = FALSE,
+              FUN = function(x) {
+                onesheet <- gs_read(ss = etable,
+                                    ws = x,
+                                    range = "A1:B38",
+                                    skip = 1,
+                                    col_names = c("items", "q_sets"),
+                                    check.names = TRUE)
+                Sys.sleep(time = 5)  # necessary to appease google quota
+                return(onesheet)
+              })
+
+# anonymise masterdat, delete first col 
+masterdat$`Erhebung.durch` <- NULL
+
+# change masterdat col name "Teilnehemde (Vorname)" to "Name"
+colnames(masterdat)[2] <- "Name"
+
+# delete N.A. in masterdat col "Names"
+masterdat <- masterdat[complete.cases(masterdat[,2]),]
+
+# problem: some participants have the same name; make names unike
+
+
+
+# check names
+if (!all(names(raw) %in% masterdat$Name)) {stop("Some names from raw are not in masterdat.")}
+if (!all(masterdat$Name %in% names(raw))) {stop("Some names from masterdat are not in raw.")}
+
+# extract qsorts  ====
+qsorts <- array(data = NA, # make empty object first
+                dim = c(nrow(items), nrow(masterdat), 2), 
+                dimnames = list(items = items$handle, 
+                                people = masterdat$Name))
+
+raw <- lapply(X = raw, FUN = function(x) {as.data.frame(x)})  # maybe necessary if tibble acts up
+for (p in names(raw)) {  # loop over people
+  for (i in raw[[p]]$handle) {  # loop over items
+    for (c in c("pers", "schul")) {  # loop over conditions
+      qsorts[i, p, c] <- raw[[p]][raw[[p]]$handle == i, c]
+    }
+  }
+}
+storage.mode(qsorts) <- "integer"
+# writeout .Rdata to repo for reproducible analysis and Travis CI ====
+save(qsorts, masterdat, items, file = "manual_data.Rdata")
+rm(qsorts, masterdat, items)
+```
+
+```{r read-data, echo=FALSE, include=FALSE}
+load(file = "manual_data.Rdata")
+```
+
+
+# Analyse

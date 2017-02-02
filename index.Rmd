@@ -1,0 +1,43 @@
+--- 
+title: "q-sb"
+author: "Verena Kasztantowicz"
+date: '`r Sys.Date()`'
+site: bookdown::bookdown_site
+description: "Sichtweisen auf Sprachbetrachtung"
+documentclass: book
+github-repo: VerenaKasztantowicz/chit
+link-citations: yes
+bibliography: verenakasztantowicz.bib
+biblio-style: apalike
+---
+  
+# Einführung
+  
+q-sb ist ein Seminarprojekt mit Grundschulpädagogik/Deutsch-Studierenden der HU Berlin im Wintersemester 2016/2017.
+Die Frage ist: Wie soll Sprachbetrachtung, als zentraler Arbeitsbereich der Deutschdidaktik, gestaltet werden?
+Welche Präferenzen haben Studierende, Lehrer, Eltern, Schüler und Personengruppen, die sich nicht tagtäglich mit didaktischen Fragen befassen?
+Auf Grundlage der theoretischen Ansätze des Seminars wurde gemeinsam ein Umfrageinstrument (Q-Methodologie) entwickelt und mit 95 Teilnehmenden erprobt.
+
+
+```{r preamble, echo=FALSE, include=FALSE}
+library(devtools)
+library(packrat)
+library(bookdown)
+library(knitr)
+library(rmarkdown)
+library(reshape2)
+library(ggplot2)
+library(gridExtra)
+# install_github("maxheld83/qmethod")
+library(qmethod)
+# install.packages("ggrepel", repos = "http://cran.us.r-project.org")
+library(ggrepel)
+library(paran)
+```
+
+```{r setup-knitr, echo = FALSE, include=FALSE}
+#opts_knit$set(root.dir = normalizePath(getwd()))  # make sure the knitr path is correct
+opts_chunk$set(tidy = TRUE, cache = TRUE)  # tidy formats code nicely in echo
+options(digits = 2)  # display only 2 digits in knitr output
+options(scipen = "100")  # penality for scientific notation
+```
