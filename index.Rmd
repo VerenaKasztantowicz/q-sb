@@ -18,7 +18,7 @@ Welche Präferenzen haben Studierende, Lehrer, Eltern, Schüler und Personengrup
 Auf Grundlage der theoretischen Ansätze des Seminars wurde gemeinsam ein Umfrageinstrument (Q-Methodologie) entwickelt und mit 95 Teilnehmenden erprobt.
 
 
-```{r preamble, echo=FALSE, include=FALSE}
+```{r setup, echo=FALSE, include=FALSE}
 library(devtools)
 library(packrat)
 library(bookdown)
@@ -39,9 +39,7 @@ library(pensieve)
 # perioridally run these
 # packrat::status()  # not to be trusted, though :(
 # packrat::snapshot()
-```
 
-```{r setup-knitr, include=FALSE}
 #opts_knit$set(root.dir = normalizePath(getwd()))  # make sure the knitr path is correct
 opts_chunk$set(tidy = TRUE, cache = TRUE, echo = FALSE, warning = FALSE, message = FALSE)  # tidy formats code nicely in echo
 options(digits = 2)  # display only 2 digits in knitr output
@@ -189,7 +187,7 @@ forced <- c("-6" = 1,
 ```{r qmethod-paran, eval = FALSE}
 nfac <- q.nfactors(dataset = qsorts, cutoff = 5, quietly = TRUE, cor.method = "spearman", iterations = 5000)
 nfac$summary
-nfac2 <- pensieve::run_parallel(dataset = qsorts, runs = 50000)
+nfac2 <- pensieve::run_parallel(dataset = qsorts, runs = 5000)
 nfac$eigenvalues$Unadjusted[1:4] - nfac2
 ```
 
