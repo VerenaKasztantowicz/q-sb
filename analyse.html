@@ -26,14 +26,14 @@
 <meta name="author" content="Verena Kasztantowicz">
 
 
-<meta name="date" content="2017-02-02">
+<meta name="date" content="2017-02-05">
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   
   
-<link rel="prev" href="daten-einlesen.html">
+<link rel="prev" href="index.html">
 
 
 <script src="libs/jquery-2.2.3/jquery.min.js"></script>
@@ -68,8 +68,10 @@
 
 <li class="divider"></li>
 <li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Einführung</a></li>
-<li class="chapter" data-level="2" data-path="daten-einlesen.html"><a href="daten-einlesen.html"><i class="fa fa-check"></i><b>2</b> Daten einlesen</a></li>
-<li class="chapter" data-level="3" data-path="analyse.html"><a href="analyse.html"><i class="fa fa-check"></i><b>3</b> Analyse</a></li>
+<li class="chapter" data-level="2" data-path="analyse.html"><a href="analyse.html"><i class="fa fa-check"></i><b>2</b> Analyse</a><ul>
+<li class="chapter" data-level="2.1" data-path="analyse.html"><a href="analyse.html#faktorerhaltung"><i class="fa fa-check"></i><b>2.1</b> Faktorerhaltung</a></li>
+<li class="chapter" data-level="2.2" data-path="analyse.html"><a href="analyse.html#faktorexktration"><i class="fa fa-check"></i><b>2.2</b> Faktorexktration</a></li>
+</ul></li>
 <li class="divider"></li>
 <li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
 
@@ -91,15 +93,47 @@
 
             <section class="normal" id="section-">
 <div id="analyse" class="section level1">
-<h1><span class="header-section-number">Kapitel 3</span> Analyse</h1>
+<h1><span class="header-section-number">Kapitel 2</span> Analyse</h1>
+<div id="faktorerhaltung" class="section level2">
+<h2><span class="header-section-number">2.1</span> Faktorerhaltung</h2>
+</div>
+<div id="faktorexktration" class="section level2">
+<h2><span class="header-section-number">2.2</span> Faktorexktration</h2>
+<pre><code>## Q-method analysis.
+## Finished on:             Sun Feb  5 21:23:07 2017
+## Original data:           37 statements, 91 Q-sorts
+## Forced distribution:     FALSE
+## Number of factors:       2
+## Rotation:                varimax
+## Flagging:                automatic
+## Correlation coefficient: spearman</code></pre>
+<div class="figure"><span id="fig:loas-comp"></span>
+<img src="Sprachbetrachtung_files/figure-html/loas-comp-1.png" alt="Ladungen der Faktoren auf den Leute-Variablen" width="672" />
+<p class="caption">
+Abbildung 2.1: Ladungen der Faktoren auf den Leute-Variablen
+</p>
+</div>
+<div class="figure"><span id="fig:f1"></span>
+<img src="Sprachbetrachtung_files/figure-html/f1-1.png" alt="Idealtypische Sortierungen Faktor 1" width="672" />
+<p class="caption">
+Abbildung 2.2: Idealtypische Sortierungen Faktor 1
+</p>
+</div>
+<div class="figure"><span id="fig:f2"></span>
+<img src="Sprachbetrachtung_files/figure-html/f2-1.png" alt="Idealtypische Sortierungen Faktor 2" width="672" />
+<p class="caption">
+Abbildung 2.3: Idealtypische Sortierungen Faktor 2
+</p>
+</div>
 
+</div>
 </div>
             </section>
 
           </div>
         </div>
       </div>
-<a href="daten-einlesen.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="index.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
 
 
 <script src="libs/gitbook-2.6.7/js/app.min.js"></script>
